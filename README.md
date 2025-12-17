@@ -21,7 +21,7 @@
 ### 🔗 Project Links
 
 - **Live project link **: https://steel-energy-ai-energy-consumption.onrender.com
-- **Video Demonstration**: [Insert Video URL]
+- **Video Demonstration**: https://youtu.be/_rfLcE8P0n0
 
 ---
 
