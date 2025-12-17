@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Results - Steel Energy AI</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 30px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00d4ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #aaa;
+        }
+
+        /* Results Summary Cards */
+        .results-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #00d4ff, #00ff88);
+        }
+
+        .result-card.energy::before {
+            background: {{ result.category_color }};
+        }
+
+        .result-card.load::before {
+            background: {% if result.load_prediction == 'Light_Load' %}#2ecc71{% elif result.load_prediction == 'Medium_Load' %}#f39c12{% else %}#e74c3c{% endif %};
+        }
+
+        .result-card.co2::before {
+            background: #27ae60;
+        }
+
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .result-card i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.8;
+        }
+
+        .result-card.energy i { color: {{ result.category_color }}; }
+        .result-card.load i { color: {% if result.load_prediction == 'Light_Load' %}#2ecc71{% elif result.load_prediction == 'Medium_Load' %}#f39c12{% else %}#e74c3c{% endif %}; }
+        .result-card.co2 i { color: #27ae60; }
+        .result-card.time i { color: #9b59b6; }
+
+        .result-card h3 {
+            font-size: 0.9rem;
+            color: #888;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .result-card .value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .result-card.energy .value { color: {{ result.category_color }}; }
+        .result-card.load .value { color: {% if result.load_prediction == 'Light_Load' %}#2ecc71{% elif result.load_prediction == 'Medium_Load' %}#f39c12{% else %}#e74c3c{% endif %}; }
+        .result-card.co2 .value { color: #27ae60; }
+        .result-card.time .value { color: #9b59b6; font-size: 1.8rem; }
+
+        .result-card .unit {
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .result-card .category {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+
+        .result-card.energy .category {
+            background: {{ result.category_color }}33;
+            color: {{ result.category_color }};
+        }
+
+        /* Graphs Section */
+        .graphs-section {
+            margin-bottom: 40px;
+        }
+
+        .graph-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .graph-title {
+            color: #1a1a2e;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .graph-title i {
+            margin-right: 10px;
+            color: #00d4ff;
+        }
+
+        .graph-container img {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+
+        /* Input Summary */
+        .input-summary {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .input-summary h3 {
+            color: #00d4ff;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .input-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 3px solid #00d4ff;
+        }
+
+        .input-item .label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .input-item .value {
+            font-size: 1.1rem;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        /* Insights Section */
+        .insights-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .insights-section h3 {
+            color: #00ff88;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+
+        .insight-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: rgba(0, 255, 136, 0.1);
+            border-radius: 10px;
+        }
+
+        .insight-item i {
+            color: #00ff88;
+            font-size: 1.2rem;
+            margin-right: 15px;
+            margin-top: 3px;
+        }
+
+        .insight-item p {
+            color: #ccc;
+            line-height: 1.5;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4ff 0%, #00ff88 100%);
+            color: #1a1a2e;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px;
+            margin-top: 40px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .result-card .value {
+                font-size: 2rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-card, .graph-container, .input-summary, .insights-section {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .result-card:nth-child(1) { animation-delay: 0.1s; }
+        .result-card:nth-child(2) { animation-delay: 0.2s; }
+        .result-card:nth-child(3) { animation-delay: 0.3s; }
+        .result-card:nth-child(4) { animation-delay: 0.4s; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="fas fa-chart-line"></i> Prediction Results</h1>
+            <p>AI-powered energy consumption analysis for steel manufacturing</p>
+        </div>
+
+        <!-- Results Summary Cards -->
+        <div class="results-summary">
+            <div class="result-card energy">
+                <i class="fas fa-bolt"></i>
+                <h3>Energy Consumption</h3>
+                <div class="value">{{ result.energy_prediction }}</div>
+                <div class="unit">kWh</div>
+                <div class="category">{{ result.energy_category }} Consumption</div>
+            </div>
+
+            <div class="result-card load">
+                <i class="fas fa-industry"></i>
+                <h3>Predicted Load Type</h3>
+                <div class="value">{{ result.load_prediction.replace('_', ' ') }}</div>
+                <div class="unit">Operational Load</div>
+            </div>
+
+            <div class="result-card co2">
+                <i class="fas fa-leaf"></i>
+                <h3>Estimated CO2</h3>
+                <div class="value">{{ result.estimated_co2 }}</div>
+                <div class="unit">kg CO2</div>
+            </div>
+
+            <div class="result-card time">
+                <i class="fas fa-clock"></i>
+                <h3>Time Analysis</h3>
+                <div class="value">{{ result.time_period }}</div>
+                <div class="unit">Peak Hour: {{ result.is_peak }}</div>
+            </div>
+        </div>
+
+        <!-- Input Summary -->
+        <div class="input-summary">
+            <h3><i class="fas fa-list-alt"></i> Your Input Parameters</h3>
+            <div class="input-grid">
+                <div class="input-item">
+                    <div class="label">Hour</div>
+                    <div class="value">{{ '%02d:00'|format(result.input_summary.hour) }}</div>
+                </div>
+                <div class="input-item">
+                    <div class="label">Day of Week</div>
+                    <div class="value">{{ result.input_summary.day }}</div>
+                </div>
+                <div class="input-item">
+                    <div class="label">Week Status</div>
+                    <div class="value">{{ result.input_summary.week_status }}</div>
+                </div>
+                <div class="input-item">
+                    <div class="label">Load Type</div>
+                    <div class="value">{{ result.input_summary.load_type.replace('_', ' ') }}</div>
+                </div>
+                <div class="input-item">
+                    <div class="label">Lagging Reactive Power</div>
+                    <div class="value">{{ result.input_summary.lagging_power }} kVarh</div>
+                </div>
+                <div class="input-item">
+                    <div class="label">Leading Reactive Power</div>
+                    <div class="value">{{ result.input_summary.leading_power }} kVarh</div>
+                </div>
+                <div class="input-item">
+                    <div class="label">Lagging Power Factor</div>
+                    <div class="value">{{ result.input_summary.lagging_pf }}%</div>
+                </div>
+                <div class="input-item">
+                    <div class="label">Leading Power Factor</div>
+                    <div class="value">{{ result.input_summary.leading_pf }}%</div>
+                </div>
+                <div class="input-item">
+                    <div class="label">CO2 Emissions</div>
+                    <div class="value">{{ result.input_summary.co2 }} tCO2</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graphs Section -->
+        <div class="graphs-section">
+            <div class="graph-container">
+                <h3 class="graph-title"><i class="fas fa-chart-bar"></i> Prediction Analysis Dashboard</h3>
+                <img src="data:image/png;base64,{{ result.prediction_graph }}" alt="Prediction Analysis">
+            </div>
+
+            <div class="graph-container">
+                <h3 class="graph-title"><i class="fas fa-chart-line"></i> Historical Comparison</h3>
+                <img src="data:image/png;base64,{{ result.comparison_graph }}" alt="Historical Comparison">
+            </div>
+        </div>
+
+        <!-- Insights Section -->
+        <div class="insights-section">
+            <h3><i class="fas fa-lightbulb"></i> AI Insights & Recommendations</h3>
+            
+            {% if result.energy_category == 'Low' %}
+            <div class="insight-item">
+                <i class="fas fa-check-circle"></i>
+                <p><strong>Excellent Efficiency!</strong> Your predicted energy consumption of {{ result.energy_prediction }} kWh is in the low range. This indicates efficient operations. Continue monitoring to maintain this performance.</p>
+            </div>
+            {% elif result.energy_category == 'Medium' %}
+            <div class="insight-item">
+                <i class="fas fa-info-circle"></i>
+                <p><strong>Moderate Consumption.</strong> Your predicted energy consumption of {{ result.energy_prediction }} kWh is within the medium range. Consider optimizing operations during peak hours to reduce consumption.</p>
+            </div>
+            {% elif result.energy_category == 'High' %}
+            <div class="insight-item">
+                <i class="fas fa-exclamation-triangle" style="color: #f39c12;"></i>
+                <p><strong>High Consumption Alert.</strong> Your predicted energy consumption of {{ result.energy_prediction }} kWh is high. Review load scheduling and consider shifting heavy operations to off-peak hours.</p>
+            </div>
+            {% else %}
+            <div class="insight-item">
+                <i class="fas fa-exclamation-circle" style="color: #e74c3c;"></i>
+                <p><strong>Very High Consumption Warning!</strong> Your predicted energy consumption of {{ result.energy_prediction }} kWh is very high. Immediate review of operations is recommended to identify energy waste.</p>
+            </div>
+            {% endif %}
+
+            {% if result.is_peak == 'Yes' %}
+            <div class="insight-item">
+                <i class="fas fa-clock"></i>
+                <p><strong>Peak Hour Operation:</strong> This prediction is during peak hours (8 AM - 6 PM on weekdays). Consider scheduling heavy loads during off-peak hours to reduce costs and grid strain.</p>
+            </div>
+            {% endif %}
+
+            <div class="insight-item">
+                <i class="fas fa-leaf"></i>
+                <p><strong>Environmental Impact:</strong> Estimated CO2 emissions of {{ result.estimated_co2 }} kg. The strong correlation between energy and CO2 (r=0.97) means reducing energy consumption directly reduces your carbon footprint.</p>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <a href="/" class="btn btn-primary">
+                <i class="fas fa-redo"></i> New Prediction
+            </a>
+            <button onclick="window.print()" class="btn btn-secondary">
+                <i class="fas fa-print"></i> Print Report
+            </button>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>M516 Business Project in Big Data & AI | GISMA University | December 2025</p>
+            <p style="margin-top: 10px;">Model: Gradient Boosting | R² Score: 0.9848 | Dataset: DAEWOO Steel Co. Ltd</p>
+        </div>
+    </div>
+</body>
+</html>
