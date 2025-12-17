@@ -12,15 +12,15 @@
 
 | Field | Details |
 |-------|---------|
-| **Author** | [Your Full Name] |
-| **Student ID** | [Your Student ID] |
+| **Author** | Dinesh |
+| **Student ID** | GH1040084 |
 | **Module** | M516 Business Project in Big Data & AI |
 | **Institution** | GISMA University of Applied Sciences |
 | **Date** | December 2025 |
 
 ### 🔗 Project Links
 
-- **GitHub Repository**: [Insert GitHub URL]
+- **Live project link **: https://steel-energy-ai-energy-consumption.onrender.com
 - **Video Demonstration**: [Insert Video URL]
 
 ---
