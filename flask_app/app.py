@@ -4,7 +4,7 @@ Flask Application for Steel Industry Energy Consumption Prediction
 A web-based interface for predicting energy consumption and load type
 in steel manufacturing using machine learning models.
 
-Author: [Your Name]
+Author: Dinesh
 Date: December 2025
 """
 
@@ -23,6 +23,7 @@ import io
 import base64
 import os
 import warnings
+import threading
 warnings.filterwarnings('ignore')
 
 app = Flask(__name__)
@@ -443,10 +444,24 @@ def api_predict():
         return jsonify({'success': False, 'error': str(e)})
 
 
-if __name__ == "__main__":
+def train_models_async():
     print("Loading data and training models...")
     load_and_train_models()
-    print("Starting Flask server...")
+    print("Models trained successfully!")
 
+
+if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+
+    # Start training in background so port opens immediately
+    training_thread = threading.Thread(target=train_models_async)
+    training_thread.start()
+
+    print("Starting Flask server...")
+    app.run(
+        host="0.0.0.0",
+        port=port,
+        debug=False,
+        use_reloader=False
+    )
+
