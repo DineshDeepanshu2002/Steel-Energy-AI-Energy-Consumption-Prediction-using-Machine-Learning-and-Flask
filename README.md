@@ -198,7 +198,7 @@ jupyter notebook notebooks/complete_analysis.ipynb
 
 ### Step 5: Launch Web Application
 
-#### Option A: Flask Application (Recommended for Submission)
+#### Option A: Flask Application 
 ```bash
 cd flask_app
 python app.py
@@ -317,9 +317,8 @@ This project is submitted as part of academic coursework for M516 Business Proje
 
 ## 👤 Author
 
-**[Your Full Name]**
-- Student ID: [Your Student ID]
-- Email: [Your Email]
+   Dinesh 
+- Student ID: Gh1040084
 - Program: MSc Computer Science
 - Institution: GISMA University of Applied Sciences
 
